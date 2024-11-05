@@ -6,6 +6,7 @@ package edu.seg2105.client.backend;
 
 import ocsf.client.*;
 
+
 import java.io.*;
 
 import edu.seg2105.client.common.*;
@@ -27,6 +28,7 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI; 
+  String loginId;
 
   
   //Constructors ****************************************************
@@ -39,10 +41,15 @@ public class ChatClient extends AbstractClient
    * @param clientUI The interface type variable.
    */
   
-  public ChatClient(String host, int port, ChatIF clientUI) 
+  public ChatClient(String loginId,String host, int port, ChatIF clientUI) 
     throws IOException 
   {
     super(host, port); //Call the superclass constructor
+    if(loginId== null || loginId.isEmpty()) {
+    	System.out.println("Error!! LoginId is mendatory, please mention!!");
+    	System.exit(1);
+    }
+    this.loginId=loginId;
     this.clientUI = clientUI;
     openConnection();
   }
@@ -62,6 +69,8 @@ public class ChatClient extends AbstractClient
     
   }
 
+ 
+
   /**
    * This method handles all data coming from the UI            
    *
@@ -71,7 +80,14 @@ public class ChatClient extends AbstractClient
   {
     try
     {
-      sendToServer(message);
+      if(message.startsWith("#")){
+    	  handleCommand(message);
+    	  
+      }
+      else {
+    	  sendToServer(message);
+      }
+       
     }
     catch(IOException e)
     {
@@ -81,9 +97,89 @@ public class ChatClient extends AbstractClient
     }
   }
   
-  /**
-   * This method terminates the client.
-   */
+  private void handleCommand(String command ) throws IOException {
+	  if(command.equals("#quit")) {
+		  quit();
+	  }
+	  else if(command.equals("#logoff")) {
+		 if(isConnected()) {
+			 closeConnection();
+		 }
+		 else {
+			 clientUI.display("Client is already logged off");
+		 }
+		 
+	  }
+	  else if(command.startsWith("#sethost")) {
+			 if(!isConnected()) {
+				 String[] token= command.split(" ");
+				 if (token.length> 1){
+					 setHost(token[1]);
+				 }
+				 else {
+					 clientUI.display("error");
+				 }
+				 
+			 }
+			 else {
+				 clientUI.display("host is connected at this moment, cannot set another one");
+				 
+			 }
+	  }
+	  else if(command.startsWith("#setport")) {
+		  if(!isConnected()) {
+				 String[] token= command.split(" ");
+				 if (token.length> 1){
+					 int port= Integer.parseInt(token[1]);
+					 setPort(port);
+				 }
+				 else {
+					 clientUI.display("error");
+				 }
+				 
+			 }
+			 else {
+				 clientUI.display(" is connected at this moment, cannot set another one");
+				 
+			 }
+	  }
+	  else if(command.equals("#login")) {
+		  if(!isConnected()) {
+			  openConnection();
+		  }
+		  else {
+			  clientUI.display("Error!!! check if there is a connection already established");
+		  }
+	  }
+	  else if(command.equals("#gethost")) {
+		  clientUI.display("host is "+getHost());
+		  
+		  
+	  }
+	  else if(command.equals("#getport")) {
+		  clientUI.display("port is "+ getPort());
+	  }
+	  else {
+		  clientUI.display("ClientUI dispay in chatclient does not work for this");
+	  }
+			 
+	  
+  }
+  
+  
+  
+  @Override
+  protected void connectionEstablished() {
+	  try {
+		  sendToServer("#login "+ loginId );
+		  
+		  
+	  }
+	  catch(IOException e) {
+		  clientUI.display("Failed to assign Login Id");
+		  quit();
+	  }
+  }
   public void quit()
   {
     try
@@ -93,5 +189,15 @@ public class ChatClient extends AbstractClient
     catch(IOException e) {}
     System.exit(0);
   }
+ @Override
+ protected void connectionException(Exception exception) {
+	clientUI.display("The server is down");
+	  System.exit(0);
+  }
+ @Override
+ protected void connectionClosed() {
+	  clientUI.display("Connection closed");
+	  
+ }
 }
 //End of ChatClient class
