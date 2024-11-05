@@ -1,4 +1,6 @@
 SimpleChatClient
+
+
 SimpleChatClient is a Java-based client application that allows real-time messaging with a chat server. This application serves as Phase 2 of the SimpleChat project, expanding on the basic client-server functionality provided in Phase 1. This project is implemented using the Object Client-Server Framework (OCSF), enabling the client and server to communicate seamlessly. This application was created as part of an individual school assignment to deepen understanding of networking, socket programming, and OCSF framework utilization.
 
 Assignment Overview
